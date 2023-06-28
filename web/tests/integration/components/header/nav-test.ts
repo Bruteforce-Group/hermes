@@ -28,6 +28,7 @@ module("Integration | Component | header/nav", function (hooks) {
 
   test("it renders correctly", async function (assert) {
     await render(hbs`
+      {{! @glint-nocheck: not typesafe yet }}
       <Header::Nav />
     `);
 
@@ -36,7 +37,7 @@ module("Integration | Component | header/nav", function (hooks) {
     assert.dom('[data-test-nav-link="my"]').hasAttribute("href", "/my");
     assert.dom('[data-test-nav-link="drafts"]').hasAttribute("href", "/drafts");
 
-    assert.dom("[data-test-nav-search-bar]").exists();
+    assert.dom(".global-search").exists();
 
     await click("[data-test-user-menu-toggle]");
 
@@ -52,6 +53,7 @@ module("Integration | Component | header/nav", function (hooks) {
 
   test("it shows an icon when the user menu has something to highlight", async function (assert) {
     await render(hbs`
+      {{! @glint-nocheck: not typesafe yet }}
       <Header::Nav />
     `);
 

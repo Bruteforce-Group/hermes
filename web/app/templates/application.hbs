@@ -1,3 +1,4 @@
+{{! @glint-nocheck: not typesafe yet }}
 {{page-title "Hermes"}}
 <div id="dialog-container" class="dialog-container"></div>
 
@@ -8,3 +9,11 @@
 </div>
 
 <Modals />
+
+<div class="absolute top-0 left-0">
+  <AnimatedOrphans />
+</div>
+
+{{#if this.animatedToolsAreShown}}
+  <AnimatedTools />
+{{/if}}

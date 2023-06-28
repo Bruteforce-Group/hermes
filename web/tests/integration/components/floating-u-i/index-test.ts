@@ -61,4 +61,33 @@ module("Integration | Component | floating-u-i/index", function (hooks) {
       .dom(".content")
       .doesNotExist("the API is also available to the content block");
   });
+
+  test("the close action can be disabled", async function (assert) {
+    await render(hbs`
+      <FloatingUI @disableClose={{true}}>
+        <:anchor as |f|>
+          <Action
+            class="open-button"
+            {{on "click" f.showContent}}
+            {{did-insert f.registerAnchor}}
+          >
+            Open
+          </Action>
+        </:anchor>
+        <:content as |f|>
+          <Action {{on "click" f.hideContent}} class="close-button">
+            Close
+          </Action>
+        </:content>
+      </FloatingUI>
+    `);
+
+    await click(".open-button");
+
+    assert.dom(".close-button").exists();
+
+    await click(".close-button");
+
+    assert.dom(".close-button").exists('the "close" action was disabled');
+  });
 });

@@ -28,10 +28,15 @@ module("Integration | Component | document/sidebar/header", function (hooks) {
   });
 
   test("it renders as expected", async function (this: DocumentSidebarHeaderTestContext, assert) {
-    this.server.create("document", { objectID: "400" });
+    this.server.create("document", {
+      objectID: "400",
+      status: "in-review",
+      docNumber: "001",
+    });
     this.set("document", this.server.schema.document.first().attrs);
 
     await render(hbs`
+      {{! @glint-nocheck: not typesafe yet }}
       <Document::Sidebar::Header
         @document={{this.document}}
         @isCollapsed={{this.isCollapsed}}
@@ -136,6 +141,7 @@ module("Integration | Component | document/sidebar/header", function (hooks) {
     configService.config.short_link_base_url = shortLinkBaseURL;
 
     await render(hbs`
+      {{! @glint-nocheck: not typesafe yet }}
       <Document::Sidebar::Header
         @document={{this.document}}
         @isCollapsed={{this.isCollapsed}}
@@ -165,6 +171,7 @@ module("Integration | Component | document/sidebar/header", function (hooks) {
     shortLinkBaseURL = "http://short.link";
 
     await render(hbs`
+      {{! @glint-nocheck: not typesafe yet }}
       <Document::Sidebar::Header
         @document={{this.document}}
         @isCollapsed={{this.isCollapsed}}
@@ -185,6 +192,7 @@ module("Integration | Component | document/sidebar/header", function (hooks) {
     configService.config.short_link_base_url = undefined as unknown as string;
 
     await render(hbs`
+      {{! @glint-nocheck: not typesafe yet }}
       <Document::Sidebar::Header
         @document={{this.document}}
         @isCollapsed={{this.isCollapsed}}
@@ -205,6 +213,7 @@ module("Integration | Component | document/sidebar/header", function (hooks) {
     configService.config.short_link_base_url = "invalidURL";
 
     await render(hbs`
+      {{! @glint-nocheck: not typesafe yet }}
       <Document::Sidebar::Header
         @document={{this.document}}
         @isCollapsed={{this.isCollapsed}}

@@ -1,13 +1,29 @@
-{{yield this to="anchor"}}
+{{yield
+  (hash
+    contentIsShown=this.contentIsShown
+    registerAnchor=this.registerAnchor
+    toggleContent=this.toggleContent
+    showContent=this.showContent
+    hideContent=this.hideContent
+    contentID=this.contentID
+  )
+  to="anchor"
+}}
 
 {{#if this.contentIsShown}}
   <FloatingUI::Content
+    @offset={{@offset}}
     @placement={{@placement}}
     @renderOut={{@renderOut}}
     @anchor={{this.anchor}}
     @id={{this.contentID}}
     ...attributes
   >
-    {{yield this to="content"}}
+    {{yield
+      (hash
+        contentID=this.contentID hideContent=this.hideContent anchor=this.anchor
+      )
+      to="content"
+    }}
   </FloatingUI::Content>
 {{/if}}

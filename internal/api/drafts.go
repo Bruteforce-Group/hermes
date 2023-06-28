@@ -10,23 +10,22 @@ import (
 	"strings"
 	"time"
 
+	"github.com/algolia/algoliasearch-client-go/v3/algolia/errs"
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/opt"
 	"github.com/algolia/algoliasearch-client-go/v3/algolia/search"
-	"github.com/hashicorp/go-hclog"
-	"gorm.io/gorm"
-
 	"github.com/hashicorp-forge/hermes/internal/config"
 	"github.com/hashicorp-forge/hermes/pkg/algolia"
 	gw "github.com/hashicorp-forge/hermes/pkg/googleworkspace"
 	hcd "github.com/hashicorp-forge/hermes/pkg/hashicorpdocs"
 	"github.com/hashicorp-forge/hermes/pkg/models"
+	"github.com/hashicorp/go-hclog"
+	"gorm.io/gorm"
 )
 
 type DraftsRequest struct {
 	Approvers           []string `json:"approvers,omitempty"`
 	Contributors        []string `json:"contributors,omitempty"`
 	DocType             string   `json:"docType,omitempty"`
-	Owner               string   `json:"owner,omitempty"`
 	Product             string   `json:"product,omitempty"`
 	ProductAbbreviation string   `json:"productAbbreviation,omitempty"`
 	Summary             string   `json:"summary,omitempty"`
@@ -67,6 +66,27 @@ func DraftsHandler(
 	db *gorm.DB) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		errResp := func(httpCode int, userErrMsg, logErrMsg string, err error) {
+			l.Error(logErrMsg,
+				"method", r.Method,
+				"path", r.URL.Path,
+				"error", err,
+			)
+			http.Error(w, userErrMsg, httpCode)
+		}
+
+		// Authorize request.
+		userEmail := r.Context().Value("userEmail").(string)
+		if userEmail == "" {
+			errResp(
+				http.StatusUnauthorized,
+				"No authorization information for request",
+				"no user email found in request context",
+				nil,
+			)
+			return
+		}
+
 		switch r.Method {
 		case "POST":
 			// Decode request.
@@ -75,12 +95,6 @@ func DraftsHandler(
 				l.Error("error decoding drafts request", "error", err)
 				http.Error(w, fmt.Sprintf("Bad request: %q", err),
 					http.StatusBadRequest)
-				return
-			}
-
-			// Validate request.
-			if req.Owner == "" {
-				http.Error(w, "Bad request: owner is required", http.StatusBadRequest)
 				return
 			}
 
@@ -98,10 +112,6 @@ func DraftsHandler(
 				return
 			}
 
-			if req.Owner == "" {
-				http.Error(w, "Bad request: owner is required", http.StatusBadRequest)
-				return
-			}
 			if req.Title == "" {
 				http.Error(w, "Bad request: title is required", http.StatusBadRequest)
 				return
@@ -145,12 +155,12 @@ func DraftsHandler(
 
 			// Get owner photo by searching Google Workspace directory.
 			op := []string{}
-			people, err := s.SearchPeople(req.Owner)
+			people, err := s.SearchPeople(userEmail, "photos")
 			if err != nil {
 				l.Error(
 					"error searching directory for person",
 					"err", err,
-					"person", req.Owner,
+					"person", userEmail,
 				)
 			}
 			if len(people) > 0 {
@@ -180,7 +190,7 @@ func DraftsHandler(
 				DocNumber:    fmt.Sprintf("%s-???", req.ProductAbbreviation),
 				DocType:      req.DocType,
 				MetaTags:     metaTags,
-				Owners:       []string{req.Owner},
+				Owners:       []string{userEmail},
 				OwnerPhotos:  op,
 				Product:      req.Product,
 				Status:       "WIP",
@@ -270,7 +280,7 @@ func DraftsHandler(
 					Name: req.DocType,
 				},
 				Owner: &models.User{
-					EmailAddress: req.Owner,
+					EmailAddress: userEmail,
 				},
 				Product: models.Product{
 					Name: req.Product,
@@ -290,7 +300,7 @@ func DraftsHandler(
 			}
 
 			// Share file with the owner
-			if err := s.ShareFile(f.Id, req.Owner, "writer"); err != nil {
+			if err := s.ShareFile(f.Id, userEmail, "writer"); err != nil {
 				l.Error("error sharing file with the owner",
 					"error", err, "doc_id", f.Id)
 				http.Error(w, "Error creating document draft",
@@ -344,14 +354,6 @@ func DraftsHandler(
 			hitsPerPageStr := q.Get("hitsPerPage")
 			maxValuesPerFacetStr := q.Get("maxValuesPerFacet")
 			pageStr := q.Get("page")
-			ownerEmail := q.Get("ownerEmail")
-
-			if ownerEmail == "" {
-				l.Error("Bad request: owner is required")
-				http.Error(w, "Error retrieving document drafts",
-					http.StatusBadRequest)
-				return
-			}
 
 			facetFilters := strings.Split(facetFiltersStr, ",")
 			facets := strings.Split(facetsStr, ",")
@@ -382,10 +384,10 @@ func DraftsHandler(
 				opt.Facets(facets...),
 				// FacetFilters are supplied as follows:
 				// ['attribute1:value', 'attribute2:value'], 'owners:owner_email_value'
-				opt.FacetFilterAnd(facetFilters, "owners:"+ownerEmail),
-				// TagFilter allows to filter for a particular OIDC ID.
-				// This enables a user to only view their own documents
-				opt.TagFilter("o_id:" + id),
+				opt.FacetFilterAnd(
+					facetFilters,
+					opt.FacetFilterOr("owners:"+userEmail, "contributors:"+userEmail),
+				),
 				opt.HitsPerPage(hitsPerPage),
 				opt.MaxValuesPerFacet(maxValuesPerFacet),
 				opt.Page(page),
@@ -452,13 +454,27 @@ func DraftsDocumentHandler(
 		baseDocObj := &hcd.BaseDoc{}
 		err = ar.Drafts.GetObject(docId, &baseDocObj)
 		if err != nil {
-			l.Error("error requesting base document object from Algolia",
-				"error", err,
-				"doc_id", docId,
-			)
-			http.Error(w, "Error accessing draft document",
-				http.StatusInternalServerError)
-			return
+			// Handle 404 from Algolia and only log a warning.
+			if _, is404 := errs.IsAlgoliaErrWithCode(err, 404); is404 {
+				l.Warn("base document object not found",
+					"error", err,
+					"path", r.URL.Path,
+					"method", r.Method,
+					"doc_id", docId,
+				)
+				http.Error(w, "Draft document not found", http.StatusNotFound)
+				return
+			} else {
+				l.Error("error requesting base document object from Algolia",
+					"error", err,
+					"path", r.URL.Path,
+					"method", r.Method,
+					"doc_id", docId,
+				)
+				http.Error(w, "Error accessing draft document",
+					http.StatusInternalServerError)
+				return
+			}
 		}
 
 		// Create new document object of the proper doc type.
@@ -498,7 +514,7 @@ func DraftsDocumentHandler(
 		}
 		if !isOwner && !isContributor {
 			http.Error(w,
-				`{"error": "Only owners or contributors can access a draft document"}`,
+				"Only owners or contributors can access a draft document",
 				http.StatusUnauthorized)
 			return
 		}
@@ -537,6 +553,26 @@ func DraftsDocumentHandler(
 			// Set custom editable fields.
 			docObj.SetCustomEditableFields()
 
+			// Get document from database.
+			doc := models.Document{
+				GoogleFileID: docId,
+			}
+			if err := doc.Get(db); err != nil {
+				l.Error("error getting document draft from database",
+					"error", err,
+					"path", r.URL.Path,
+					"method", r.Method,
+					"doc_id", docId,
+				)
+				http.Error(w, "Error requesting document draft",
+					http.StatusInternalServerError)
+				return
+			}
+
+			// Set locked value for response to value from the database (this value
+			// isn't stored in Algolia).
+			docObj.SetLocked(doc.Locked)
+
 			// Write response.
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -550,18 +586,24 @@ func DraftsDocumentHandler(
 				return
 			}
 
-			// Update recently viewed docs for the user.
-			if err := updateRecentlyViewedDocs(userEmail, docId, db, now); err != nil {
-				// If we get an error, log it but don't return an error response because
-				// this would degrade UX.
-				l.Error("error updating recently viewed docs",
-					"error", err,
-					"path", r.URL.Path,
-					"method", r.Method,
-					"doc_id", docId,
-				)
-				return
-
+			// Update recently viewed documents if this is a document view event. The
+			// Add-To-Recently-Viewed header is set in the request from the frontend
+			// to differentiate between document views and requests to only retrieve
+			// document metadata.
+			if r.Header.Get("Add-To-Recently-Viewed") != "" {
+				if err := updateRecentlyViewedDocs(userEmail, docId, db, now); err != nil {
+					// If we get an error, log it but don't return an error response because
+					// this would degrade UX.
+					// TODO: change this log back to an error when this handles incomplete
+					// data in the database.
+					l.Warn("error updating recently viewed docs",
+						"error", err,
+						"path", r.URL.Path,
+						"method", r.Method,
+						"doc_id", docId,
+					)
+					return
+				}
 			}
 
 			l.Info("retrieved document draft", "doc_id", docId)
@@ -570,7 +612,7 @@ func DraftsDocumentHandler(
 			// Authorize request.
 			if !isOwner {
 				http.Error(w,
-					`{"error": "Only owners can delete a draft document"}`,
+					"Only owners can delete a draft document",
 					http.StatusUnauthorized)
 				return
 			}
@@ -670,6 +712,24 @@ func DraftsDocumentHandler(
 				// Set product abbreviation because we use this later to update the
 				// doc number in the Algolia object.
 				productAbbreviation = p.Abbreviation
+			}
+
+			// Check if document is locked.
+			locked, err := hcd.IsLocked(docId, db, s, l)
+			if err != nil {
+				l.Error("error checking document locked status",
+					"error", err,
+					"method", r.Method,
+					"path", r.URL.Path,
+					"doc_id", docId,
+				)
+				http.Error(w, "Error getting document status", http.StatusNotFound)
+				return
+			}
+			// Don't continue if document is locked.
+			if locked {
+				http.Error(w, "Document is locked", http.StatusLocked)
+				return
 			}
 
 			// Compare contributors in request and stored object in Algolia

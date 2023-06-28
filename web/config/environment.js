@@ -53,6 +53,8 @@ module.exports = function (environment) {
       docFolders: getEnv("GOOGLE_DOCFOLDERS", "").split(","),
     },
 
+    skipGoogleAuth: getEnv("SKIP_GOOGLE_AUTH"),
+
     torii: {
       sessionServiceName: "session",
       providers: {
@@ -63,6 +65,8 @@ module.exports = function (environment) {
         },
       },
     },
+
+    showEmberAnimatedTools: getEnv("SHOW_EMBER_ANIMATED_TOOLS", false),
 
     featureFlags: {},
   };

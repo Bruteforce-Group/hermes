@@ -62,12 +62,19 @@ export default class AuthenticatedUserService extends Service {
 
   /**
    * Loads the user's info from the Google API.
-   * Called by the `authenticated` route on load.
-   * Ensures `authenticatedUser.info` is always defined.
-   * On error, will bubble up to the application route.
+   * Called by `session.handleAuthentication` and `authenticated.afterModel`.
+   * Ensures `authenticatedUser.info` is always defined and up-to-date
+   * in any route that needs it. On error, bubbles up to the application route.
    */
   loadInfo = task(async () => {
-    this._info = await this.store.queryRecord("google.userinfo.me", {});
+    try {
+      this._info = await this.fetchSvc
+        .fetch("/api/v1/me")
+        .then((response) => response?.json());
+    } catch (e: unknown) {
+      console.error("Error getting user information: ", e);
+      throw e;
+    }
   });
 
   /**
