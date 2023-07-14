@@ -37,7 +37,7 @@
       class="person-email hds-typography-body-200 truncate hds-foreground-primary relative"
       title={{@email}}
     >
-      {{or @email "Unknown"}}
+      {{or (parse-name-from-email @email) "Unknown"}}
     </div>
   </div>
 {{/unless}}
