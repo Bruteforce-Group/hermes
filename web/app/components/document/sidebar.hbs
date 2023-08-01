@@ -115,7 +115,7 @@
             </:default>
             <:editing as |F|>
               <Hds::Form::Textarea::Field
-                {{F.editableInput}}
+                {{F.textInput}}
                 {{auto-height-textarea}}
                 @value={{F.value}}
                 class="primary-textarea"
@@ -154,12 +154,11 @@
           </:default>
           <:editing as |F|>
             <Hds::Form::Textarea::Field
-              {{F.editableInput}}
+              {{F.textInput}}
               {{auto-height-textarea}}
               @value={{F.value}}
               class="primary-textarea"
               name="summary"
-              as |F|
             />
           </:editing>
         </EditableField>
@@ -193,6 +192,21 @@
             @icon={{get-product-id @document.product}}
           />
         {{/if}}
+      </div>
+
+      <div class="flex flex-col items-start">
+        <Document::Sidebar::RelatedResources
+          @editingIsDisabled={{this.editingIsDisabled}}
+          @documentIsDraft={{this.isDraft}}
+          @productArea={{@document.product}}
+          @objectID={{@document.objectID}}
+          @allowAddingExternalLinks={{true}}
+          @headerTitle="Related resources"
+          @modalHeaderTitle="Add related resource"
+          @modalInputPlaceholder="Search docs or paste a URL..."
+          @scrollContainer={{this.body}}
+          @optionalSearchFilters={{array (concat "product:" @document.product)}}
+        />
       </div>
 
       <div class="flex flex-col items-start space-y-2">
@@ -234,7 +248,7 @@
               class="multiselect--narrow"
               @selected={{this.contributors}}
               @onChange={{this.updateContributors}}
-              {{click-outside (fn F.update this.contributors)}}
+              {{click-outside (fn F.update F.value)}}
             />
           </:editing>
         </EditableField>
@@ -272,38 +286,13 @@
               class="multiselect--narrow"
               @selected={{this.approvers}}
               @onChange={{this.updateApprovers}}
-              {{click-outside (fn F.update this.approvers)}}
+              {{click-outside (fn F.update F.value)}}
             />
           </:editing>
         </EditableField>
       </div>
 
-      <div class="flex flex-col items-start space-y-2">
-        <Document::Sidebar::SectionHeader @title="Created" />
-        <p>{{or @document.createdDate "Unknown"}}</p>
-      </div>
-
-      <div class="flex flex-col items-start space-y-2">
-        <Document::Sidebar::SectionHeader @title="Last modified" />
-        <p>{{@document.lastModified}}</p>
-      </div>
-
-      <div class="flex flex-col items-start">
-        <Document::Sidebar::RelatedResources
-          @editingIsDisabled={{this.editingIsDisabled}}
-          @documentIsDraft={{this.isDraft}}
-          @productArea={{@document.product}}
-          @objectID={{@document.objectID}}
-          @allowAddingExternalLinks={{true}}
-          @headerTitle="Related resources"
-          @modalHeaderTitle="Add related resource"
-          @modalInputPlaceholder="Search docs or paste a URL..."
-          @scrollContainer={{this.body}}
-          @optionalSearchFilters={{array (concat "product:" @document.product)}}
-        />
-      </div>
-
-      {{#each-in this.customEditableFields as |field attributes|}}
+      {{#each-in this.sortedCustomEditableFields as |field attributes|}}
         {{#if (or attributes.value this.isOwner)}}
           <div class="flex flex-col items-start space-y-2">
             <Document::Sidebar::SectionHeader
@@ -315,11 +304,21 @@
               @attributes={{attributes}}
               @onChange={{perform this.save field}}
               @loading={{this.save.isRunning}}
-              @disabled={{this.editingIsDisabled}}
+              @disabled={{not this.isOwner}}
             />
           </div>
         {{/if}}
       {{/each-in}}
+
+      <div class="flex flex-col items-start space-y-2">
+        <Document::Sidebar::SectionHeader @title="Created" />
+        <p>{{or @document.createdDate "Unknown"}}</p>
+      </div>
+
+      <div class="flex flex-col items-start space-y-2">
+        <Document::Sidebar::SectionHeader @title="Last modified" />
+        <p>{{@document.lastModified}}</p>
+      </div>
     </div>
   </div>
 

@@ -24,7 +24,8 @@ interface EditableFieldComponentSignature {
       F: {
         value: any;
         update: (value: any) => void;
-        editableInput: any;
+        // TODO: type this as a modifier
+        textInput: any;
         errorIsShown: boolean;
       }
     ];
@@ -82,23 +83,30 @@ export default class EditableFieldComponent extends Component<EditableFieldCompo
   }
 
   @action protected maybeUpdateValue(eventOrValue: Event | any) {
-    let newValue = eventOrValue;
+    let newValue: string | string[] | undefined;
 
     if (eventOrValue instanceof Event) {
       const target = eventOrValue.target;
       assert("target must exist", target);
       assert("value must exist in the target", "value" in target);
       const value = target.value;
-      newValue = value;
+      newValue = value as string | string[];
     }
 
-    // FIXME: in the case of arrays, the newValue and this.args.value are the same
-    // we need some way of detecting whether the array has changed
+    if (eventOrValue instanceof Array) {
+      newValue = eventOrValue;
+    }
 
     if (newValue !== this.args.value) {
-      if (newValue === "" && this.args.isRequired) {
-        this.emptyValueErrorIsShown = true;
-        return;
+      if (newValue === "") {
+        if (this.args.isRequired) {
+          this.emptyValueErrorIsShown = true;
+          return;
+        }
+        if (this.args.value === undefined) {
+          this.editingIsEnabled = false;
+          return;
+        }
       }
       this.args.onChange?.(newValue);
     }

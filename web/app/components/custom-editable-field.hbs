@@ -25,8 +25,8 @@
       <Hds::Form::Textarea::Field
         @value={{F.value}}
         name={{@field}}
+        {{F.textInput}}
         {{auto-height-textarea}}
-        {{on "blur" F.update}}
         data-test-custom-string-field-input
       />
     </:editing>
@@ -60,10 +60,12 @@
       {{/if}}
     </:default>
     <:editing as |F|>
+      {{log F.value}}
       <Inputs::PeopleSelect
         class="multiselect--narrow"
         @selected={{this.people}}
         @onChange={{this.updateEmails}}
+        {{!-- TODO: there's a conflict between this and EmberPowerSelect --}}
         {{click-outside (fn F.update this.people)}}
         data-test-custom-people-field-input
       />

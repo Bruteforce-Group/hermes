@@ -24,7 +24,7 @@ export interface HermesDocument {
   approvedBy?: string[];
   summary?: string;
   isDraft?: boolean;
-  customEditableFields?: CustomEditableFields;
+  customEditableFields?: Record<string, CustomEditableField>;
 
   thumbnail?: string;
   _snippetResult?: {
@@ -32,10 +32,6 @@ export interface HermesDocument {
       value: string;
     };
   };
-}
-
-export interface CustomEditableFields {
-  [key: string]: CustomEditableField;
 }
 
 export interface CustomEditableField {

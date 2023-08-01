@@ -17,7 +17,11 @@ import RouterService from "@ember/routing/router-service";
 import SessionService from "hermes/services/session";
 import FlashMessageService from "ember-cli-flash/services/flash-messages";
 import { AuthenticatedUser } from "hermes/services/authenticated-user";
-import { HermesDocument, HermesUser } from "hermes/types/document";
+import {
+  CustomEditableField,
+  HermesDocument,
+  HermesUser,
+} from "hermes/types/document";
 import { assert } from "@ember/debug";
 import Route from "@ember/routing/route";
 import Ember from "ember";
@@ -176,13 +180,43 @@ export default class DocumentSidebarComponent extends Component<DocumentSidebarC
     return this.args.document?.locked;
   }
 
-  get customEditableFields() {
+  get customEditableFields(): Record<string, CustomEditableField> {
     let customEditableFields = this.args.document.customEditableFields || {};
     for (const field in customEditableFields) {
       // @ts-ignore - TODO: Type this
       customEditableFields[field]["value"] = this.args.document[field];
     }
     return customEditableFields;
+  }
+
+  get sortedCustomEditableFields() {
+    let peopleFields = [];
+    let stringFields = [];
+
+    for (const field in this.customEditableFields) {
+      const customEditableField = this.customEditableFields[field];
+      if ((customEditableField as CustomEditableField).type === "PEOPLE") {
+        peopleFields.push(field);
+      } else if (
+        (customEditableField as CustomEditableField).type === "STRING"
+      ) {
+        stringFields.push(field);
+      }
+    }
+
+    let sortedArray = peopleFields.concat(stringFields);
+
+    // we don't want to return an array, but a Record<string, CustomEditableField>
+    // so we need to convert the array to a Record.
+
+    let sortedRecord: Record<string, CustomEditableField> = {};
+
+    for (const field of sortedArray) {
+      // @ts-ignore - TODO: Type this
+      sortedRecord[field] = this.customEditableFields[field];
+    }
+
+    return sortedRecord;
   }
 
   get approveButtonText() {
