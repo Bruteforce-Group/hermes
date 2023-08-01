@@ -67,9 +67,10 @@ export default class EditableFieldComponent extends Component<EditableFieldCompo
     if (ev.key === "Enter") {
       ev.preventDefault();
 
-      // Trigger the this.onBlur action
-      assert("inputElement must exist", this.inputElement);
-      this.inputElement.blur();
+      if (this.inputElement) {
+        this.inputElement.blur();
+      }
+
       return;
     }
 
@@ -91,18 +92,20 @@ export default class EditableFieldComponent extends Component<EditableFieldCompo
       newValue = value;
     }
 
+    // FIXME: in the case of arrays, the newValue and this.args.value are the same
+    // we need some way of detecting whether the array has changed
+
     if (newValue !== this.args.value) {
       if (newValue === "" && this.args.isRequired) {
         this.emptyValueErrorIsShown = true;
         return;
       }
-
       this.args.onChange?.(newValue);
-
-      scheduleOnce("actions", this, () => {
-        this.editingIsEnabled = false;
-      });
     }
+
+    scheduleOnce("actions", this, () => {
+      this.editingIsEnabled = false;
+    });
   }
 }
 
