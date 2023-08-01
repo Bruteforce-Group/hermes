@@ -1,8 +1,10 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
-import { scheduleOnce } from "@ember/runloop";
+import { schedule, scheduleOnce } from "@ember/runloop";
 import { assert } from "@ember/debug";
+import { modifier } from "ember-modifier";
+import { ModifierLike } from "@glint/template";
 
 export const FOCUSABLE =
   'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -14,61 +16,71 @@ interface EditableFieldComponentSignature {
     onChange: (value: any) => void;
     loading?: boolean;
     disabled?: boolean;
+    isRequired?: boolean;
   };
   Blocks: {
-    default: [];
+    default: [value: any];
     editing: [
       F: {
         value: any;
         update: (value: any) => void;
+        editableInput: any;
+        errorIsShown: boolean;
       }
     ];
   };
 }
 
 export default class EditableFieldComponent extends Component<EditableFieldComponentSignature> {
-  @tracked protected editing = false;
-  @tracked protected el: HTMLElement | null = null;
-  @tracked protected cachedValue = null;
+  @tracked protected editingIsEnabled = false;
+  @tracked protected emptyValueErrorIsShown = false;
+  @tracked protected value = this.args.value;
 
-  @action protected captureElement(el: HTMLElement) {
-    this.el = el;
-  }
+  @tracked private hasCancelled = false;
+  @tracked private inputElement: HTMLInputElement | HTMLTextAreaElement | null =
+    null;
 
-  @action protected edit() {
-    this.cachedValue = this.args.value;
-    this.editing = true;
+  protected editableFieldInput = modifier((element: HTMLElement) => {
+    this.inputElement = element as HTMLInputElement | HTMLTextAreaElement;
+    this.inputElement.focus();
+    element.addEventListener("blur", this.onBlur);
+    return () => element.removeEventListener("blur", this.onBlur);
+  });
 
-    // Kinda gross, but this gives focus to the first focusable element in the
-    // :editing block, which will typically be an input.
-    scheduleOnce("afterRender", this, () => {
-      if (this.el && !this.el.contains(document.activeElement)) {
-        const firstInput = this.el.querySelector(FOCUSABLE);
-        if (firstInput) (firstInput as HTMLElement).focus();
-      }
-    });
-  }
-
-  @action protected cancel(ev: KeyboardEvent) {
-    if (ev.key === "Escape") {
-      ev.preventDefault();
-      scheduleOnce("actions", this, () => {
-        this.editing = false;
+  @action private onBlur(event: FocusEvent) {
+    if (this.hasCancelled) {
+      this.value = this.args.value;
+      schedule("actions", () => {
+        this.hasCancelled = false;
       });
+      return;
     }
+
+    this.maybeUpdateValue(event);
   }
 
-  @action protected preventNewlines(ev: KeyboardEvent) {
+  @action protected enableEditing() {
+    this.editingIsEnabled = true;
+  }
+
+  @action protected handleKeydown(ev: KeyboardEvent) {
     if (ev.key === "Enter") {
       ev.preventDefault();
+
+      // Trigger the this.onBlur action
+      assert("inputElement must exist", this.inputElement);
+      this.inputElement.blur();
+      return;
+    }
+
+    if (ev.key === "Escape") {
+      ev.preventDefault();
+      this.hasCancelled = true;
+      this.editingIsEnabled = false;
     }
   }
 
-  @action protected update(eventOrValue: Event | any) {
-    scheduleOnce("actions", this, () => {
-      this.editing = false;
-    });
-
+  @action protected maybeUpdateValue(eventOrValue: Event | any) {
     let newValue = eventOrValue;
 
     if (eventOrValue instanceof Event) {
@@ -79,8 +91,17 @@ export default class EditableFieldComponent extends Component<EditableFieldCompo
       newValue = value;
     }
 
-    if (newValue !== this.cachedValue) {
+    if (newValue !== this.args.value) {
+      if (newValue === "" && this.args.isRequired) {
+        this.emptyValueErrorIsShown = true;
+        return;
+      }
+
       this.args.onChange?.(newValue);
+
+      scheduleOnce("actions", this, () => {
+        this.editingIsEnabled = false;
+      });
     }
   }
 }

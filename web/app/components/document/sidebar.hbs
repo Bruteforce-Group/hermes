@@ -97,47 +97,39 @@
             </X::DropdownList>
           {{/if}}
         </div>
-        {{#if this.isOwner}}
-          <div class="mb-8">
-            <EditableField
-              data-test-document-title-editable
-              @value={{this.title}}
-              @onChange={{perform this.save "title"}}
-              @loading={{this.save.isRunning}}
-              @disabled={{this.editingIsDisabled}}
-            >
-              <:default>
-                {{#unless (is-empty this.title)}}
-                  <h1
-                    class="hds-typography-display-300 hds-font-weight-semibold hds-foreground-strong"
-                  >{{this.title}}</h1>
-                {{else}}
-                  <h1
-                    data-test-document-title-read-only
-                    class="hds-typography-display-300 hds-font-weight-semibold hds-foreground-faint"
-                  >
-                    Enter a title here.
-                  </h1>
-                {{/unless}}
-              </:default>
-              <:editing as |F|>
-                <Hds::Form::Textarea::Field
-                  {{auto-height-textarea}}
-                  @value={{F.value}}
-                  class="primary-textarea"
-                  name="title"
-                  {{on "blur" F.update}}
-                  as |F|
-                />
-              </:editing>
-            </EditableField>
-          </div>
-        {{else}}
-          <h1
-            data-test-document-title-read-only
-            class="hds-typography-display-300 hds-font-weight-semibold hds-foreground-strong"
-          >{{this.title}}</h1>
-        {{/if}}
+        <div class="mb-8">
+          <EditableField
+            data-test-document-title-editable
+            @value={{this.title}}
+            @onChange={{perform this.save "title"}}
+            @loading={{this.save.isRunning}}
+            @disabled={{not this.isOwner}}
+            @isRequired={{true}}
+          >
+            <:default as |F|>
+              <h1
+                class="hds-typography-display-300 hds-font-weight-semibold hds-foreground-strong"
+              >
+                {{F.value}}
+              </h1>
+            </:default>
+            <:editing as |F|>
+              <Hds::Form::Textarea::Field
+                {{F.editableInput}}
+                {{auto-height-textarea}}
+                @value={{F.value}}
+                class="primary-textarea"
+                name="title"
+              as |FF|>
+              {{#if F.errorIsShown}}
+                <FF.Error>
+                  Title is required.
+                </FF.Error>
+              {{/if}}
+              </Hds::Form::Textarea::Field>
+            </:editing>
+          </EditableField>
+        </div>
       </div>
 
       <hr class="border-0 border-b hds-border-faint" />
