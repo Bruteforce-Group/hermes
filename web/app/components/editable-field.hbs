@@ -5,8 +5,10 @@
       (hash
         value=this.value
         update=this.maybeUpdateValue
+        onChange=@onChange
         textInput=this.editableFieldInput
         errorIsShown=this.emptyValueErrorIsShown
+        disableEditing=this.disableEditing
       )
       to="editing"
     }}

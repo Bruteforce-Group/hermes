@@ -42,6 +42,10 @@ export default class CustomEditableFieldComponent extends Component<CustomEditab
       return person.email;
     });
   }
+
+  @action onPeopleSelectDestroy() {
+    debugger;
+  }
 }
 
 declare module "@glint/environment-ember-loose/registry" {

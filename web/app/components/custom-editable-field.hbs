@@ -35,7 +35,7 @@
 {{else if this.typeIsPeople}}
   <EditableField
     data-test-custom-people-field
-    @value={{get @attributes "value"}}
+    @value={{this.people}}
     @onChange={{@onChange}}
     @loading={{@loading}}
     @disabled={{@disabled}}
@@ -56,19 +56,23 @@
           {{/each}}
         </ol>
       {{else}}
-        <CustomEditableFields::EmptyState />
+        <CustomEditableFields::EmptyState class="related" />
       {{/if}}
     </:default>
     <:editing as |F|>
-      {{log F.value}}
       <Inputs::PeopleSelect
-        class="multiselect--narrow"
+        class="multiselect--narrow bull-ass-shit bg-red-500"
         @selected={{this.people}}
         @onChange={{this.updateEmails}}
-        {{!-- TODO: there's a conflict between this and EmberPowerSelect --}}
-        {{click-outside (fn F.update this.people)}}
+        {{dismissible
+          dismiss=F.disableEditing
+          related=(html-element ".related")
+        }}
+        {{! i think the problem is that the people select wants to queue an array of people whereas the other  components dont }}
+        {{! FIXME: click outside doesn't support blur }}
         data-test-custom-people-field-input
       />
+
     </:editing>
   </EditableField>
 {{/if}}

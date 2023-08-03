@@ -27,6 +27,8 @@ interface EditableFieldComponentSignature {
         // TODO: type this as a modifier
         textInput: any;
         errorIsShown: boolean;
+        onChange: (value: any) => void;
+        disableEditing: () => void;
       }
     ];
   };
@@ -64,6 +66,10 @@ export default class EditableFieldComponent extends Component<EditableFieldCompo
     this.editingIsEnabled = true;
   }
 
+  @action protected disableEditing() {
+    this.editingIsEnabled = false;
+  }
+
   @action protected handleKeydown(ev: KeyboardEvent) {
     if (ev.key === "Enter") {
       ev.preventDefault();
@@ -85,6 +91,7 @@ export default class EditableFieldComponent extends Component<EditableFieldCompo
   @action protected maybeUpdateValue(eventOrValue: Event | any) {
     let newValue: string | string[] | undefined;
 
+    console.log("eventOrValue", eventOrValue);
     if (eventOrValue instanceof Event) {
       const target = eventOrValue.target;
       assert("target must exist", target);
@@ -97,6 +104,7 @@ export default class EditableFieldComponent extends Component<EditableFieldCompo
       newValue = eventOrValue;
     }
 
+    console.log("this.args.value", this.args.value);
     if (newValue !== this.args.value) {
       if (newValue === "") {
         if (this.args.isRequired) {
@@ -108,6 +116,8 @@ export default class EditableFieldComponent extends Component<EditableFieldCompo
           return;
         }
       }
+      console.log("newValue", newValue);
+
       this.args.onChange?.(newValue);
     }
 

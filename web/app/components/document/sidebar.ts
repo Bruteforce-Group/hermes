@@ -561,6 +561,7 @@ export default class DocumentSidebarComponent extends Component<DocumentSidebarC
   });
 
   save = task(async (field: string, val: string | HermesUser[]) => {
+    console.log("save", field, val);
     if (field && val !== undefined) {
       let serializedValue;
 

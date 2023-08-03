@@ -50,10 +50,17 @@ export default class InputsPeopleSelectComponent extends Component<InputsPeopleS
    * Clears the people list and calls `this.args.onBlur` if it exists.
    */
   @action onClose() {
+    console.log("onClose");
+    // this actually happens when a name is selected, not when it closes...
     this.people = [];
+    console.log("onClose");
     if (this.args.onBlur) {
       this.args.onBlur();
     }
+  }
+
+  @action onBlur() {
+    console.log("onBlur");
   }
 
   /**
