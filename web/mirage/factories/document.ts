@@ -29,6 +29,7 @@ export default Factory.extend({
   modifiedAgo: 1000000000,
   modifiedTime: 1,
   appCreated: true,
+  isDraft: true,
   docNumber() {
     // @ts-ignore - Mirage types are wrong
     // See discussion at https://github.com/miragejs/miragejs/pull/525
@@ -39,5 +40,6 @@ export default Factory.extend({
       value: "This is a test document",
     },
   },
+  approvers: [],
   owners: ["testuser@example.com"],
 });

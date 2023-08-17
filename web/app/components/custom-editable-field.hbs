@@ -48,7 +48,7 @@
               {{#if person.imgURL}}
                 <img
                   src="{{person.imgURL}}"
-                  class="align-middle h-4 w-4 rounded-full"
+                  class="h-4 w-4 rounded-full align-middle"
                 />
               {{/if}}
               {{person.email}}
@@ -61,7 +61,7 @@
     </:default>
     <:editing as |F|>
       <Inputs::PeopleSelect
-        class="multiselect--narrow bull-ass-shit bg-red-500"
+        class="multiselect--narrow bg-red-500"
         @selected={{this.people}}
         @onChange={{this.updateEmails}}
         {{dismissible
