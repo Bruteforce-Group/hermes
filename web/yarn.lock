@@ -2301,10 +2301,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hashicorp/ember-flight-icons@npm:^3.1.3":
+  version: 3.1.3
+  resolution: "@hashicorp/ember-flight-icons@npm:3.1.3"
+  dependencies:
+    "@hashicorp/flight-icons": ^2.20.0
+    ember-auto-import: ^2.6.3
+    ember-cli-babel: ^7.26.11
+    ember-cli-htmlbars: ^6.2.0
+  checksum: 196dec75deb983cbfeae6738c5bba7482f645d8ad419b1ab79c0f12f64d0f06e9c7ffb01ce13540e80aabb5ceb490c05c6cd56a7b25ceb3413ebe8274889a298
+  languageName: node
+  linkType: hard
+
 "@hashicorp/flight-icons@npm:^2.12.0":
   version: 2.12.0
   resolution: "@hashicorp/flight-icons@npm:2.12.0"
   checksum: dbc7316ad69f8209fd196254e2ae7c47984181822e367eaea1301176083240fbbf64a7230adf787b7669d606fe329461e01ca738e514beac9742cb1ba0103f9a
+  languageName: node
+  linkType: hard
+
+"@hashicorp/flight-icons@npm:^2.20.0":
+  version: 2.22.0
+  resolution: "@hashicorp/flight-icons@npm:2.22.0"
+  checksum: 6b7953fc4fab2e00efead994df12eea9f0cc8ba9d5a8024551fa8fb78da201595d8e4ec988834aaf0c44808d72c213a9c141052d153f22c03d8d918651feb6e3
   languageName: node
   linkType: hard
 
@@ -7699,7 +7718,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ember-auto-import@npm:^2.6.0":
+"ember-auto-import@npm:^2.6.0, ember-auto-import@npm:^2.6.3":
   version: 2.6.3
   resolution: "ember-auto-import@npm:2.6.3"
   dependencies:
@@ -10535,7 +10554,7 @@ __metadata:
 
 "fsevents@patch:fsevents@^1.2.7#~builtin<compat/fsevents>":
   version: 1.2.13
-  resolution: "fsevents@patch:fsevents@npm%3A1.2.13#~builtin<compat/fsevents>::version=1.2.13&hash=d11327"
+  resolution: "fsevents@patch:fsevents@npm%3A1.2.13#~builtin<compat/fsevents>::version=1.2.13&hash=18f3a7"
   dependencies:
     bindings: ^1.5.0
     nan: ^2.12.1
@@ -10545,7 +10564,7 @@ __metadata:
 
 "fsevents@patch:fsevents@~2.3.2#~builtin<compat/fsevents>":
   version: 2.3.2
-  resolution: "fsevents@patch:fsevents@npm%3A2.3.2#~builtin<compat/fsevents>::version=2.3.2&hash=df0bf1"
+  resolution: "fsevents@patch:fsevents@npm%3A2.3.2#~builtin<compat/fsevents>::version=2.3.2&hash=18f3a7"
   dependencies:
     node-gyp: latest
   conditions: os=darwin
@@ -11125,7 +11144,7 @@ __metadata:
     "@glint/environment-ember-loose": ^1.0.1
     "@glint/template": ^1.0.1
     "@hashicorp/design-system-components": ^2.0.0
-    "@hashicorp/ember-flight-icons": ^3.0.2
+    "@hashicorp/ember-flight-icons": ^3.1.3
     "@tsconfig/ember": latest
     "@types/ember": latest
     "@types/ember-data": latest
@@ -15635,7 +15654,7 @@ __metadata:
 
 "resolve@patch:resolve@^1.1.7#~builtin<compat/resolve>, resolve@patch:resolve@^1.10.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.10.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.11.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.12.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.13.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.14.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.17.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.20.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.22.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.3.3#~builtin<compat/resolve>, resolve@patch:resolve@^1.4.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.5.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.8.1#~builtin<compat/resolve>":
   version: 1.22.1
-  resolution: "resolve@patch:resolve@npm%3A1.22.1#~builtin<compat/resolve>::version=1.22.1&hash=c3c19d"
+  resolution: "resolve@patch:resolve@npm%3A1.22.1#~builtin<compat/resolve>::version=1.22.1&hash=07638b"
   dependencies:
     is-core-module: ^2.9.0
     path-parse: ^1.0.7
@@ -17473,7 +17492,7 @@ __metadata:
 
 "typescript@patch:typescript@latest#~builtin<compat/typescript>":
   version: 4.9.4
-  resolution: "typescript@patch:typescript@npm%3A4.9.4#~builtin<compat/typescript>::version=4.9.4&hash=d73830"
+  resolution: "typescript@patch:typescript@npm%3A4.9.4#~builtin<compat/typescript>::version=4.9.4&hash=701156"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
