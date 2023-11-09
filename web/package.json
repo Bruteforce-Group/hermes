@@ -128,7 +128,7 @@
   },
   "dependencies": {
     "@csstools/postcss-sass": "^5.0.1",
-    "@floating-ui/dom": "^1.2.4",
+    "@floating-ui/dom": "^1.5.3",
     "@hashicorp/design-system-components": "^2.0.0",
     "@hashicorp/ember-flight-icons": "^3.0.2",
     "@types/sinon": "^10.0.13",
